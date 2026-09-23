@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المحفظة - FreeFire Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<header class="header">
+    <h1>💰 المحفظة</h1>
+    <p>مرحبًا {{ user["username"] }}</p>
+</header>
+
+<main class="container">
+
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <section class="wallet-balance">
+        <span>الرصيد الحالي</span>
+        <strong>{{ user["balance"] }} جنيه</strong>
+    </section>
+
+    <section class="wallet-card">
+
+        <h2>➕ إيداع رصيد</h2>
+
+        <form method="POST" action="{{ url_for('deposit') }}">
+
+            <label>طريقة الدفع</label>
+
+            <select name="payment_method_id" id="payment_method" required
+                    onchange="showPaymentInfo()">
+
+                <option value="">اختر طريقة الدفع</option>
+
+                {% for method in payment_methods %}
+                    <option
+                        value="{{ method['id'] }}"
+                        data-number="{{ method['account_number'] }}"
+                        data-owner="{{ method['owner_name'] }}"
+                    >
+                        {{ method["name"] }}
+                    </option>
+                {% endfor %}
+
+            </select>
+
+            <div id="payment-info" class="payment-info" style="display:none;">
+                <p>
+                    <strong>رقم الحساب:</strong>
+                    <span id="account-number"></span>
+                </p>
+
+                <p>
+                    <strong>صاحب الحساب:</strong>
+                    <span id="account-owner"></span>
+                </p>
+            </div>
+
+            <label>مبلغ الإيداع</label>
+            <input
+                type="number"
+                name="amount"
+                min="1"
+                step="0.01"
+                placeholder="مثال: 500"
+                required
+            >
+
+            <label>رقم العملية</label>
+            <input
+                type="text"
+                name="transaction_number"
+                placeholder="أدخل رقم العملية"
+                required
+            >
+
+            <button type="submit">إرسال طلب الإيداع</button>
+
+        </form>
+
+    </section>
+
+    <section class="wallet-card">
+
+        <h2>📋 سجل الإيداعات</h2>
+
+        {% if deposits %}
+
+            <div class="deposit-list">
+
+                {% for deposit in deposits %}
+
+                    <div class="deposit-item">
+
+                        <div>
+                            <strong>#{{ deposit["id"] }}</strong>
+                            <span>{{ deposit["payment_method"] }}</span>
+                        </div>
+
+                        <div>
+                            <strong>{{ deposit["amount"] }} جنيه</strong>
+                        </div>
+
+                        <div>
+                            رقم العملية:
+                            {{ deposit["transaction_number"] }}
+                        </div>
+
+                        <div>
+                            {% if deposit["status"] == "pending" %}
+                                <span class="status pending">قيد المراجعة</span>
+                            {% elif deposit["status"] == "approved" %}
+                                <span class="status approved">مقبول ✅</span>
+                            {% else %}
+                                <span class="status rejected">مرفوض ❌</span>
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <p class="empty">لا توجد إيداعات حتى الآن.</p>
+
+        {% endif %}
+
+    </section>
+
+    <a class="back-link" href="{{ url_for('home') }}">
+        العودة للمتجر
+    </a>
+
+</main>
+
+<script>
+function showPaymentInfo() {
+    const select = document.getElementById("payment_method");
+    const option = select.options[select.selectedIndex];
+
+    const info = document.getElementById("payment-info");
+    const number = document.getElementById("account-number");
+    const owner = document.getElementById("account-owner");
+
+    if (!option.value) {
+        info.style.display = "none";
+        return;
+    }
+
+    number.textContent = option.dataset.number;
+    owner.textContent = option.dataset.owner;
+    info.style.display = "block";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب - FreeFire Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="auth-page">
+
+    <div class="auth-card">
+
+        <div class="auth-icon">👤</div>
+
+        <h1>إنشاء حساب</h1>
+        <p>أنشئ حسابك وابدأ التسوق</p>
+
+        {% with messages = get_flashed_messages() %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST">
+
+            <label>اسم المستخدم</label>
+            <input type="text" name="username" required>
+
+            <label>البريد الإلكتروني</label>
+            <input type="email" name="email" required>
+
+            <label>🆔 معرف استرداد الحساب</label>
+<input
+    type="text"
+    name="recovery_id"
+    placeholder="مثال: FF123456"
+    required
+>
+
+<p style="font-size:13px; opacity:.75;">
+    ⚠️ احتفظ بهذا المعرّف، ستحتاجه عند استعادة كلمة المرور.
+</p>
+
+<label>📱 رقم واتساب</label>
+            <input
+                type="tel"
+                name="whatsapp"
+                placeholder="مثال: 249XXXXXXXXX"
+                required
+            >
+
+            <label>كلمة المرور</label>
+            <input type="password" name="password" minlength="6" required>
+
+            <button type="submit">إنشاء الحساب</button>
+
+        </form>
+
+        <div class="auth-link">
+            لديك حساب بالفعل؟
+            <a href="{{ url_for('login') }}">تسجيل الدخول</a>
+        </div>
+
+        <a class="back-link" href="{{ url_for('home') }}">العودة للمتجر</a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+.env
+__pycache__/
+*.pyc
+database/*.db
+*.sqlite
+*.sqlite3
+bot/__pycache__/
+database/__pycache__/
+
+# Local databases and backups
+shop.db
+database/shop.db
+database/*.db
+*.db
+*.sqlite
+*.sqlite3
+*.backup
+*.backup-*
+
+# Temporary / backup files
+41-
+bot/*.backup
+bot/*.backup-offers
+
+# Uploaded user files
+static/uploads/

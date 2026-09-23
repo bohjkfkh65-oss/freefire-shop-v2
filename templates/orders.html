@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طلباتي - FreeFire Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<header class="header">
+    <h1>🛒 طلباتي</h1>
+    <p>تابع حالة طلبات الشحن الخاصة بك</p>
+
+    <div class="nav-buttons">
+        <a href="{{ url_for('home') }}">🏠 الرئيسية</a>
+        <a href="{{ url_for('wallet') }}">💰 المحفظة</a>
+        <a href="{{ url_for('logout') }}">🚪 خروج</a>
+    </div>
+</header>
+
+<main class="container">
+
+    <div class="orders-page">
+
+        {% if orders %}
+
+            {% for order in orders %}
+
+            <div class="order-card">
+
+                <div class="order-top">
+                    <strong>🛒 الطلب #{{ order["id"] }}</strong>
+
+                    {% if order["status"] == "pending" %}
+                        <span class="order-status pending">⏳ قيد التنفيذ</span>
+                    {% elif order["status"] == "completed" %}
+                        <span class="order-status completed">✅ مكتمل</span>
+                    {% elif order["status"] == "rejected" %}
+                        <span class="order-status rejected">❌ مرفوض</span>
+                    {% else %}
+                        <span class="order-status">{{ order["status"] }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="order-product">
+                    💎 {{ order["product_name"] }}
+                </div>
+
+                <div class="order-info">
+                    <div>
+                        🎮 Player ID
+                        <strong>{{ order["player_id"] }}</strong>
+                    </div>
+
+                    <div>
+                        💵 المبلغ
+                        <strong>{{ order["amount"] }} جنيه</strong>
+                    </div>
+                </div>
+
+                {% if order["status"] == "pending" %}
+                    <div class="order-note">
+                        ⏳ طلبك قيد المراجعة، سيتم تحديث حالته بعد مراجعة الإدارة.
+                    </div>
+                {% elif order["status"] == "completed" %}
+                    <div class="order-note success">
+                        ✅ تم تنفيذ طلبك بنجاح.
+                    </div>
+                {% elif order["status"] == "rejected" %}
+                    <div class="order-note danger">
+                        ❌ تم رفض الطلب وتمت إعادة المبلغ إلى محفظتك.
+                    </div>
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="empty">
+                🛒 لا توجد لديك طلبات حتى الآن
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</main>
+
+</body>
+</html>

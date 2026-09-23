@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>حسابات Free Fire للبيع</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        /* =========================================
+           صفحة حسابات للبيع
+           ========================================= */
+
+        .accounts-page {
+            width: 100%;
+            padding-bottom: 50px;
+        }
+
+        .accounts-hero {
+            width: min(1000px, 92%);
+            margin: 30px auto 20px;
+            text-align: center;
+        }
+
+        .accounts-hero h2 {
+            font-size: 32px;
+            margin: 15px 0;
+        }
+
+        .accounts-hero p {
+            font-size: 17px;
+            line-height: 1.8;
+        }
+
+        .accounts-grid {
+            width: min(1100px, 94%) !important;
+            margin: 25px auto !important;
+
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)) !important;
+
+            gap: 24px !important;
+            align-items: stretch;
+        }
+
+        /* البطاقة */
+        .account-card {
+            width: 100% !important;
+            min-width: 0 !important;
+
+            display: block !important;
+            position: relative !important;
+
+            overflow: hidden !important;
+
+            border-radius: 22px !important;
+            box-sizing: border-box !important;
+        }
+
+        /* معرض الصور */
+        .account-gallery {
+            position: relative;
+
+            width: 100%;
+            height: 220px;
+
+            overflow: hidden;
+
+            background: #111827;
+            border-radius: 22px 22px 0 0;
+        }
+
+        .gallery-img {
+            position: absolute;
+
+            inset: 0;
+
+            width: 100% !important;
+            height: 100% !important;
+
+            object-fit: cover !important;
+
+            display: none !important;
+
+            margin: 0 !important;
+            padding: 0 !important;
+
+            cursor: pointer;
+        }
+
+        .gallery-img.active {
+            display: block !important;
+        }
+
+        /* أزرار الصور */
+        .gallery-arrow {
+            position: absolute;
+
+            top: 50%;
+            transform: translateY(-50%);
+
+            width: 44px;
+            height: 44px;
+
+            border: none;
+            border-radius: 50%;
+
+            background: rgba(0, 0, 0, 0.65);
+            color: white;
+
+            font-size: 24px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            z-index: 5;
+        }
+
+        .gallery-arrow:hover {
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        .gallery-prev {
+            right: 12px;
+        }
+
+        .gallery-next {
+            left: 12px;
+        }
+
+        .gallery-counter {
+            position: absolute;
+
+            bottom: 10px;
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            padding: 5px 12px;
+
+            border-radius: 20px;
+
+            background: rgba(0, 0, 0, 0.70);
+            color: white;
+
+            font-size: 13px;
+
+            z-index: 5;
+        }
+
+        /* تفاصيل الحساب */
+        .account-body {
+            width: 100% !important;
+
+            display: block !important;
+
+            box-sizing: border-box !important;
+
+            padding: 20px !important;
+        }
+
+        .account-badge {
+            display: inline-block;
+
+            margin-bottom: 10px;
+            padding: 7px 12px;
+
+            border-radius: 20px;
+
+            font-size: 14px;
+        }
+
+        .account-body h3 {
+            font-size: 23px !important;
+
+            margin: 8px 0 12px !important;
+
+            line-height: 1.4;
+        }
+
+        .account-description {
+            font-size: 16px !important;
+
+            line-height: 1.9 !important;
+
+            margin: 0 0 15px !important;
+
+            min-height: auto !important;
+
+            word-break: break-word;
+        }
+
+        .account-seller {
+            font-size: 15px !important;
+
+            margin: 12px 0 18px !important;
+        }
+
+        /* السعر والشراء */
+        .account-bottom {
+            width: 100% !important;
+
+            display: flex !important;
+
+            align-items: center !important;
+            justify-content: space-between !important;
+
+            gap: 15px !important;
+
+            margin-top: 10px !important;
+        }
+
+        .account-price {
+            display: flex !important;
+
+            flex-direction: column !important;
+
+            align-items: flex-start !important;
+
+            white-space: nowrap;
+        }
+
+        .account-price strong {
+            font-size: 27px !important;
+
+            line-height: 1.2;
+        }
+
+        .account-price span {
+            font-size: 14px !important;
+
+            margin-top: 3px;
+        }
+
+        .account-buy-btn {
+            flex: 1;
+
+            min-width: 140px !important;
+            min-height: 56px !important;
+
+            padding: 12px 20px !important;
+
+            border: none !important;
+            border-radius: 16px !important;
+
+            font-size: 19px !important;
+            font-weight: 800 !important;
+
+            cursor: pointer;
+
+            transition: transform 0.2s ease;
+        }
+
+        .account-buy-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* لا توجد حسابات */
+        .accounts-empty {
+            grid-column: 1 / -1;
+
+            text-align: center;
+
+            padding: 45px 20px;
+        }
+
+        .accounts-empty > div {
+            font-size: 55px;
+            margin-bottom: 15px;
+        }
+
+        .accounts-empty h2 {
+            font-size: 24px;
+        }
+
+        .accounts-empty p {
+            font-size: 16px;
+        }
+
+        .accounts-empty a {
+            display: inline-block;
+
+            margin-top: 15px;
+
+            padding: 13px 22px;
+
+            border-radius: 14px;
+
+            text-decoration: none;
+        }
+
+        /* الهاتف */
+        @media (max-width: 600px) {
+
+            .accounts-hero {
+                width: 92%;
+                margin-top: 20px;
+            }
+
+            .accounts-hero h2 {
+                font-size: 25px;
+            }
+
+            .accounts-hero p {
+                font-size: 15px;
+            }
+
+            .accounts-grid {
+                width: 92% !important;
+
+                grid-template-columns: 1fr !important;
+
+                gap: 20px !important;
+            }
+
+            .account-gallery {
+                height: 205px;
+            }
+
+            .account-body {
+                padding: 18px !important;
+            }
+
+            .account-body h3 {
+                font-size: 22px !important;
+            }
+
+            .account-description {
+                font-size: 15px !important;
+            }
+
+            .account-bottom {
+                align-items: center !important;
+            }
+
+            .account-price strong {
+                font-size: 25px !important;
+            }
+
+            .account-buy-btn {
+                min-width: 145px !important;
+                min-height: 56px !important;
+
+                font-size: 18px !important;
+            }
+
+            .gallery-arrow {
+                width: 42px;
+                height: 42px;
+            }
+        }
+    
+        .account-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .account-actions form {
+            margin: 0;
+        }
+
+        .account-delete-btn {
+            min-height: 56px;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 16px;
+            background: #8b1e2d;
+            color: white;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .account-delete-btn:active {
+            transform: scale(0.96);
+        }
+
+        @media (max-width: 600px) {
+            .account-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .account-actions .account-buy-btn,
+            .account-actions form,
+            .account-actions form button {
+                width: 100%;
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+<header class="main-header">
+
+    <div class="brand">
+
+        <div class="brand-fire">🎮</div>
+
+        <div>
+            <h1>حسابات Free Fire</h1>
+            <p>حسابات متاحة للبيع</p>
+        </div>
+
+    </div>
+
+
+    <div class="header-actions">
+
+        <a class="header-btn"
+           href="{{ url_for('home') }}">
+            🏠 الرئيسية
+        </a>
+
+        {% if session.get("user_id") %}
+
+        <a class="header-btn"
+           href="{{ url_for('sell_account') }}">
+            ➕ بيع حسابك
+        </a>
+
+        <a class="header-btn wallet-btn"
+           href="{{ url_for('wallet') }}">
+            💰 المحفظة
+        </a>
+
+        {% else %}
+
+        <a class="header-btn register-btn"
+           href="{{ url_for('login') }}">
+            🔐 تسجيل الدخول
+        </a>
+
+        {% endif %}
+
+    </div>
+
+</header>
+
+
+<main class="accounts-page">
+
+    <section class="accounts-hero">
+
+        <div class="hero-badge">
+            🎮 حسابات Free Fire
+        </div>
+
+        <h2>
+            اختر حسابك <span>المميز</span> 🔥
+        </h2>
+
+        <p>
+            تصفح الحسابات المعروضة للبيع واختر الحساب المناسب لك
+        </p>
+
+    </section>
+
+
+    <section class="accounts-grid">
+
+        {% for account in accounts %}
+
+        {% set images = account["images"]|fromjson %}
+
+        <article class="account-card">
+
+            <!-- معرض صور الحساب -->
+
+            <div class="account-gallery"
+                 id="gallery-{{ account['id'] }}">
+
+                {% if images %}
+
+                    {% for image in images %}
+
+                    <img
+                        class="gallery-img {% if loop.first %}active{% endif %}"
+                        src="{{ url_for('static', filename='uploads/accounts/' + image) }}"
+                        alt="{{ account['title'] }}"
+                    >
+
+                    {% endfor %}
+
+                    {% if images|length > 1 %}
+
+                    <button
+                        type="button"
+                        class="gallery-arrow gallery-prev"
+                        onclick="changeGallery('{{ account['id'] }}', -1)">
+                        ❯
+                    </button>
+
+                    <button
+                        type="button"
+                        class="gallery-arrow gallery-next"
+                        onclick="changeGallery('{{ account['id'] }}', 1)">
+                        ❮
+                    </button>
+
+                    <div class="gallery-counter">
+                        <span class="gallery-current">1</span>
+                        /
+                        {{ images|length }}
+                    </div>
+
+                    {% endif %}
+
+                {% else %}
+
+                    <div class="no-account-image">
+                        🎮
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- تفاصيل الحساب -->
+
+            <div class="account-body">
+
+                <div class="account-badge">
+                    ✅ معروض للبيع
+                </div>
+
+
+                <h3>
+                    {{ account["title"] }}
+                </h3>
+
+
+                <p class="account-description">
+                    {{ account["description"] }}
+                </p>
+
+
+                <div class="account-seller">
+                    👤 البائع:
+                    <strong>{{ account["username"] }}</strong>
+                </div>
+
+
+                <div class="account-bottom">
+
+                    <div class="account-price">
+
+                        <strong>
+                            {{ "%.0f"|format(account["price"]) }}
+                        </strong>
+
+                        <span>
+                            جنيه
+                        </span>
+
+                    </div>
+
+
+                    <div class="account-actions">
+
+                        <a
+                            class="account-buy-btn"
+                            href="{{ url_for('buy_account', account_id=account['id']) }}">
+                            🛒 شراء
+                        </a>
+
+                        {% if session.get('user_id') == account['user_id'] %}
+                        <form
+                            method="POST"
+                            action="{{ url_for('delete_account', account_id=account['id']) }}"
+                            onsubmit="return confirm('هل أنت متأكد من حذف هذا الإعلان؟\\nسيختفي من المتجر عند جميع الأعضاء.');">
+
+                            <button
+                                type="submit"
+                                class="account-delete-btn">
+                                🗑️ حذف
+                            </button>
+
+                        </form>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </article>
+
+        {% else %}
+
+        <div class="accounts-empty">
+
+            <div>🎮</div>
+
+            <h2>
+                لا توجد حسابات للبيع حاليًا
+            </h2>
+
+            <p>
+                كن أول شخص يعرض حسابه للبيع!
+            </p>
+
+            {% if session.get("user_id") %}
+
+            <a href="{{ url_for('sell_account') }}">
+                ➕ عرض حساب للبيع
+            </a>
+
+            {% else %}
+
+            <a href="{{ url_for('login') }}">
+                🔐 تسجيل الدخول
+            </a>
+
+            {% endif %}
+
+        </div>
+
+        {% endfor %}
+
+    </section>
+
+</main>
+
+
+<script>
+function buyAccount(whatsapp, title) {
+    if (!whatsapp) {
+        alert("❌ صاحب الحساب لم يضف رقم واتساب.");
+        return;
+    }
+
+    const number = String(whatsapp).replace(/\D/g, "");
+
+    if (!number) {
+        alert("❌ رقم واتساب غير صالح.");
+        return;
+    }
+
+    const message = encodeURIComponent(
+        "مرحبًا، أريد شراء حساب Free Fire: " + title
+    );
+
+    window.open(
+        "https://wa.me/" + number + "?text=" + message,
+        "_blank"
+    );
+}
+
+
+
+function changeGallery(accountId, direction) {
+
+    const gallery = document.getElementById("gallery-" + accountId);
+
+    if (!gallery) {
+        return;
+    }
+
+    const images = gallery.querySelectorAll(".gallery-img");
+
+    if (images.length <= 1) {
+        return;
+    }
+
+    let current = 0;
+
+    images.forEach((img, index) => {
+
+        if (img.classList.contains("active")) {
+            current = index;
+        }
+
+    });
+
+    images[current].classList.remove("active");
+
+    current += direction;
+
+    if (current < 0) {
+        current = images.length - 1;
+    }
+
+    if (current >= images.length) {
+        current = 0;
+    }
+
+    images[current].classList.add("active");
+
+    const counter = gallery.querySelector(".gallery-current");
+
+    if (counter) {
+        counter.textContent = current + 1;
+    }
+}
+
+</script>
+
+</body>
+</html>

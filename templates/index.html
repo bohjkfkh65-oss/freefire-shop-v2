@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FreeFire Shop 🔥</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="home-page">
+
+<!-- الخلفية المتحركة -->
+<div class="bg-glow glow-one"></div>
+<div class="bg-glow glow-two"></div>
+
+<header class="main-header">
+
+    <div class="brand">
+        <div class="brand-fire">🔥</div>
+
+        <div>
+            <h1>FreeFire Shop</h1>
+            <p>متجر شحن Free Fire</p>
+        </div>
+    </div>
+
+    <div class="header-actions">
+
+        {% if session.get("user_id") %}
+
+            <a class="header-btn wallet-btn"
+               href="{{ url_for('wallet') }}">
+                💰 المحفظة
+            </a>
+
+            <a class="header-btn"
+               href="{{ url_for('change_password') }}">
+                ⚙️ إعدادات الحساب
+            </a>
+            <a class="header-btn"
+               href="{{ url_for('orders') }}">
+                🛒 طلباتي
+            </a>
+
+            <a class="header-btn logout-btn"
+               href="{{ url_for('logout') }}">
+                🚪 خروج
+            </a>
+
+        {% else %}
+
+            <a class="header-btn"
+               href="{{ url_for('login') }}">
+                🔐 تسجيل الدخول
+            </a>
+
+            <a class="header-btn register-btn"
+               href="{{ url_for('register') }}">
+                📝 إنشاء حساب
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <!-- Hero -->
+    <section class="hero">
+
+        <div class="hero-badge">
+            ⚡ شحن سريع وآمن
+        </div>
+
+        <h2>
+            اشحن <span>Free Fire</span>
+            بسهولة 🚀
+        </h2>
+
+        <p>
+            اختر الباقة المناسبة لك واستمتع بأفضل تجربة شحن
+        </p>
+
+        {% if session.get("user_id") %}
+            <a href="#packages" class="hero-button">
+                💎 تصفح الباقات
+            </a>
+        {% else %}
+            <a href="{{ url_for('register') }}" class="hero-button">
+                🚀 ابدأ الآن
+            </a>
+        {% endif %}
+
+    </section>
+
+
+    <!-- الخدمات -->
+    <section class="services">
+
+<!-- بيع الحساب -->
+        <a href="{{ url_for('sell_account') }}" class="service-card">
+            <div class="service-icon">💰</div>
+            <div>
+                <h3>بيع حسابك</h3>
+                <p>اعرض حساب Free Fire الخاص بك للبيع</p>
+            </div>
+        </a>
+
+
+        <a href="{{ url_for('orders') }}"
+           class="service-card">
+
+            <div class="service-icon">🛒</div>
+
+            <div>
+                <h3>طلباتي</h3>
+                <p>تابع جميع طلبات الشحن</p>
+            </div>
+
+        </a>
+
+
+        {% if session.get("user_id") %}
+
+        <a href="{{ url_for('wallet') }}"
+           class="service-card">
+
+            <div class="service-icon">💰</div>
+
+            <div>
+                <h3>المحفظة</h3>
+                <p>إدارة رصيدك وعمليات الإيداع</p>
+            </div>
+
+        </a>
+
+        {% else %}
+
+        <a href="{{ url_for('login') }}"
+           class="service-card">
+
+            <div class="service-icon">💰</div>
+
+            <div>
+                <h3>المحفظة</h3>
+                <p>سجّل الدخول لإدارة رصيدك</p>
+            </div>
+
+        </a>
+
+        {% endif %}
+
+
+        <a href="{{ url_for('suggestion') }}"
+           class="service-card">
+
+            <div class="service-icon">💡</div>
+
+            <div>
+                <h3>صندوق المقترحات</h3>
+                <p>أرسل لنا فكرتك أو اقتراحك</p>
+            </div>
+
+        </a>
+
+
+        <div class="service-card coming-soon">
+
+            <div class="service-icon">🎮</div>
+
+            <div>
+                <h3>حسابات للبيع</h3>
+                <p>قريبًا — حسابات Free Fire</p>
+            </div>
+
+            <span>قريبًا</span>
+
+        </div>
+
+    </section>
+
+
+    <!-- قسم العروض -->
+    {% if offers %}
+    <section class="offers-section" id="offers">
+        <div class="section-heading">
+            <span class="section-kicker">🔥 عروض حصرية</span>
+            <h2>العروض الحالية</h2>
+            <p>استفد من الأسعار المخفضة قبل انتهاء العرض</p>
+        </div>
+
+        <div class="offers-grid">
+            {% for offer in offers %}
+            <article class="offer-card">
+
+                <div class="offer-badge">
+                    🔥 عرض خاص
+                </div>
+
+                <div class="offer-icon">
+                    💎
+                </div>
+
+                <div class="offer-content">
+                    <h3>{{ offer["product_name"] }}</h3>
+
+                    {% if offer["description"] %}
+                    <p class="offer-description">
+                        {{ offer["description"] }}
+                    </p>
+                    {% elif offer["product_description"] %}
+                    <p class="offer-description">
+                        {{ offer["product_description"] }}
+                    </p>
+                    {% endif %}
+
+                    <div class="offer-prices">
+                        <span class="offer-old-price">
+                            {{ "%.0f"|format(offer["old_price"]) }} جنيه
+                        </span>
+
+                        <strong class="offer-new-price">
+                            {{ "%.0f"|format(offer["offer_price"]) }}
+                            <small>جنيه</small>
+                        </strong>
+                    </div>
+
+                    <div class="offer-meta">
+                        <span>
+                            ⏱️
+                            {% if offer["duration_unit"] == "hours" %}
+                                {{ (offer["duration_minutes"] // 60) }} ساعة
+                            {% else %}
+                                {{ (offer["duration_minutes"] // 1440) }} يوم
+                            {% endif %}
+                        </span>
+
+                        <span>
+                            🟢 متاح الآن
+                        </span>
+                    </div>
+
+                    {% if session.get("user_id") %}
+                    <a class="buy-button offer-buy-button"
+                       href="{{ url_for('buy', product_id=offer['product_id']) }}">
+                        <span>استفد من العرض</span>
+                        <b>→</b>
+                    </a>
+                    {% else %}
+                    <a class="buy-button offer-buy-button"
+                       href="{{ url_for('login') }}">
+                        <span>سجّل الدخول للشراء</span>
+                        <b>→</b>
+                    </a>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+
+    <!-- Google -->
+    <section class="google-section" id="google-products">
+        <div class="section-heading">
+            <span class="section-kicker google-kicker">🔵 Google</span>
+            <h2>خدمات Google</h2>
+            <p>حسابات Google وخدمات Google Play</p>
+        </div>
+
+        <div class="google-grid">
+
+            {% for google_product in products if google_product["category"] == "google" %}
+            <article class="google-card">
+
+                <div class="google-icon">G</div>
+
+                <span class="google-badge">Google</span>
+
+                <h3>{{ google_product["name"] }}</h3>
+
+                <p>
+                    {{ google_product["description"] }}
+                </p>
+
+                <div class="google-price">
+                    {{ "%.0f"|format(google_product["price"]) }}
+                    <small>جنيه</small>
+                </div>
+
+                {% if session.get("user_id") %}
+                <a class="buy-button google-button"
+                   href="{{ url_for('buy', product_id=google_product['id']) }}">
+                    <span>🛒 شراء الحساب</span>
+                    <b>→</b>
+                </a>
+                {% else %}
+                <a class="buy-button google-button"
+                   href="{{ url_for('login') }}">
+                    <span>🔐 تسجيل الدخول للشراء</span>
+                    <b>→</b>
+                </a>
+                {% endif %}
+
+            </article>
+            {% endfor %}
+
+        </div>
+    </section>
+
+    <!-- عنوان الباقات -->
+    <section class="packages-section" id="packages">
+
+        <div class="section-heading">
+
+            <div>
+                <span class="small-title">FREE FIRE</span>
+
+                <h2>
+                    💎 باقات الجواهر
+                </h2>
+
+                <p>
+                    اختر الباقة المناسبة لك
+                </p>
+            </div>
+
+            <div class="diamond-big">
+                💎
+            </div>
+
+        </div>
+
+
+        <div class="products-grid">
+
+            {% for product in products %}
+
+            <article class="product-card">
+
+                <div class="product-shine"></div>
+
+                <div class="product-icon">
+                    💎
+                </div>
+
+                <div class="product-content">
+
+                    <div class="product-category">
+                        FREE FIRE
+                    </div>
+
+                    <h3>
+                        {{ product["name"] }}
+                    </h3>
+
+                    <p>
+                        {{ product["description"] }}
+                    </p>
+
+                    <div class="product-price">
+                        <strong>
+                            {{ "%.0f"|format(product["price"]) }}
+                        </strong>
+                        <span>جنيه</span>
+                    </div>
+
+                    {% if session.get("user_id") %}
+
+                    <a class="buy-button"
+                       href="{{ url_for('buy', product_id=product['id']) }}">
+
+                        <span>شراء الآن</span>
+                        <b>→</b>
+
+                    </a>
+
+                    {% else %}
+
+                    <a class="buy-button"
+                       href="{{ url_for('login') }}">
+
+                        <span>سجّل الدخول للشراء</span>
+                        <b>→</b>
+
+                    </a>
+
+                    {% endif %}
+
+                </div>
+
+            </article>
+
+            {% else %}
+
+            <div class="empty-products">
+
+                <div>💎</div>
+
+                <h3>لا توجد باقات حاليًا</h3>
+
+                <p>
+                    سيتم إضافة الباقات قريبًا
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+
+    <!-- العضويات -->
+    <section class="membership-section">
+
+        <div class="membership-title">
+
+            <span>👑</span>
+
+            <div>
+                <h2>عضويات Free Fire</h2>
+                <p>مميزات إضافية لفترة أطول</p>
+            </div>
+
+        </div>
+
+        <div class="membership-grid">
+
+            {% for product in products if 'عضوية' in product["name"] %}
+
+            <article class="membership-card">
+
+                <div class="crown">👑</div>
+
+                <h3>
+                    {{ product["name"] }}
+                </h3>
+
+                <p>
+                    {{ product["description"] }}
+                </p>
+
+                <div class="membership-price">
+                    {{ "%.0f"|format(product["price"]) }}
+                    <small>جنيه</small>
+                </div>
+
+                {% if session.get("user_id") %}
+
+                <a href="{{ url_for('buy', product_id=product['id']) }}">
+                    شراء العضوية
+                </a>
+
+                {% else %}
+
+                <a href="{{ url_for('login') }}">
+                    تسجيل الدخول
+                </a>
+
+                {% endif %}
+
+            </article>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+
+    <!-- الشريط السفلي -->
+    <section class="bottom-info">
+
+        <div>
+            <span>⚡</span>
+            <strong>تنفيذ سريع</strong>
+            <small>طلباتك تحت المراجعة</small>
+        </div>
+
+        <div>
+            <span>🔐</span>
+            <strong>آمن</strong>
+            <small>حماية حسابك وبياناتك</small>
+        </div>
+
+        <div>
+            <span>💬</span>
+            <strong>دعم</strong>
+            <small>نساعدك عند الحاجة</small>
+        </div>
+
+    </section>
+
+
+<!-- =========================
+     حسابات للبيع
+========================= -->
+
+<section class="approved-accounts-section">
+
+    <div class="accounts-section-heading">
+        <div>
+            <span class="section-kicker">🎮 Free Fire</span>
+            <h2>حسابات للبيع 🔥</h2>
+            <p>حسابات تمت مراجعتها والموافقة عليها من الإدارة</p>
+        </div>
+
+        <a href="{{ url_for('accounts') }}" class="accounts-view-all">
+            مشاهدة الكل →
+        </a>
+    </div>
+
+    {% if accounts %}
+
+    <div class="approved-accounts-grid">
+
+        {% for account in accounts[:6] %}
+
+        <article class="approved-account-card">
+
+            <div class="approved-account-image">
+
+                {% set images = account["images"]|fromjson %}
+
+                {% if images and images[0] %}
+
+                <img
+                    src="{{ url_for('static', filename='uploads/accounts/' + images[0]) }}"
+                    alt="{{ account['title'] }}"
+                >
+
+                {% else %}
+
+                <div class="account-placeholder">
+                    🎮
+                </div>
+
+                {% endif %}
+
+                <span class="approved-badge">
+                    ✅ موثوق
+                </span>
+
+            </div>
+
+            <div class="approved-account-content">
+
+                <h3>{{ account["title"] }}</h3>
+
+                <p>
+                    {{ account["description"][:110] }}
+                    {% if account["description"]|length > 110 %}...{% endif %}
+                </p>
+
+                <div class="approved-account-info">
+                    <span>👤 {{ account["username"] }}</span>
+                </div>
+
+                <div class="approved-account-footer">
+
+                    <div class="approved-price">
+                        <strong>
+                            {{ "%.0f"|format(account["price"]) }}
+                        </strong>
+                        <span>جنيه</span>
+                    </div>
+
+                    <a
+                        href="{{ url_for('accounts') }}"
+                        class="approved-view-btn">
+                        👀 التفاصيل
+                    </a>
+
+                </div>
+
+            </div>
+
+        </article>
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <div class="no-approved-accounts">
+        <div class="no-accounts-icon">🎮</div>
+        <h3>لا توجد حسابات للبيع حاليًا</h3>
+        <p>كن أول شخص يعرض حسابه للبيع.</p>
+
+
+    </div>
+
+    {% endif %}
+
+</section>
+
+</main>
+
+
+<footer class="footer">
+
+    <h3>🔥 FreeFire Shop</h3>
+
+    <p>
+        متجر شحن Free Fire
+    </p>
+
+    {% if session.get("user_id") %}
+
+    <div class="footer-links">
+
+        <a href="{{ url_for('orders') }}">🛒 طلباتي</a>
+
+        <a href="{{ url_for('change_password') }}">⚙️ إعدادات الحساب</a>
+            <a href="{{ url_for('wallet') }}">💰 المحفظة</a>
+
+        <a href="{{ url_for('suggestion') }}">💡 المقترحات</a>
+
+    </div>
+
+    {% endif %}
+
+    <small>
+        جميع الحقوق محفوظة © FreeFire Shop
+    </small>
+
+</footer>
+
+</body>
+</html>

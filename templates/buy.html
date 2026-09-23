@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شراء الباقة - FreeFire Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<main class="container">
+
+    <div class="buy-card">
+
+        <div class="diamond-animation">💎</div>
+
+        <h1>{{ product["name"] }}</h1>
+
+        <p>{{ product["description"] }}</p>
+
+        {% if offer %}
+        <div class="buy-offer-box">
+            <div class="buy-offer-title">🔥 عرض خاص</div>
+
+            <div class="buy-old-price">
+                {{ "%.0f"|format(offer["old_price"]) }} جنيه
+            </div>
+
+            <div class="buy-price buy-offer-price">
+                {{ "%.0f"|format(purchase_price) }} جنيه
+            </div>
+
+            {% if offer["description"] %}
+            <div class="buy-offer-description">
+                {{ offer["description"] }}
+            </div>
+            {% endif %}
+
+            <div class="buy-offer-details">
+                {% if offer["duration_unit"] == "hours" %}
+                    ⏱️ مدة العرض: {{ offer["duration_minutes"] // 60 }} ساعة
+                {% else %}
+                    📅 مدة العرض: {{ offer["duration_minutes"] // 1440 }} يوم
+                {% endif %}
+                <br>
+                ⏳ ينتهي: {{ offer["expires_at"] }}
+            </div>
+        </div>
+        {% else %}
+        <div class="buy-price">
+            {{ "%.0f"|format(product["price"]) }} جنيه
+        </div>
+        {% endif %}
+
+        <div class="buy-balance">
+            رصيدك الحالي:
+            <strong>{{ user["balance"] }} جنيه</strong>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST">
+
+            <label>🎮 Player ID</label>
+
+            <input
+                type="text"
+                name="player_id"
+                placeholder="أدخل Player ID الخاص بك"
+                required
+            >
+
+            <button type="submit">
+                💎 تأكيد الشراء
+            </button>
+
+        </form>
+
+        <a class="back-link" href="{{ url_for('home') }}">
+            العودة للباقات
+        </a>
+
+    </div>
+
+</main>
+
+</body>
+</html>
