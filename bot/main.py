@@ -372,6 +372,132 @@ async def button_handler(
         )
         return
 
+    if data in ("offer_enable", "offer_disable", "offer_delete"):
+        action = data.split("_", 1)[1]
+
+        db = get_db()
+        try:
+            rows = db.execute("""
+                SELECT o.id, o.active, o.offer_price, o.expires_at,
+                       p.name AS product_name
+                FROM offers o
+                JOIN products p ON p.id = o.product_id
+                ORDER BY o.id DESC
+            """).fetchall()
+        finally:
+            db.close()
+
+        if not rows:
+            await query.answer("لا توجد عروض.", show_alert=True)
+            return
+
+        buttons = []
+
+        for row in rows:
+            status = "🟢" if row["active"] else "⚪"
+            buttons.append([
+                InlineKeyboardButton(
+                    f"{status} {row['product_name']} — {row['offer_price']:,.0f}",
+                    callback_data=f"offer_action:{action}:{row['id']}"
+                )
+            ])
+
+        buttons.append([
+            InlineKeyboardButton("🔙 رجوع", callback_data="admin_offers")
+        ])
+
+        title = {
+            "enable": "🟢 اختر العرض الذي تريد تفعيله:",
+            "disable": "🔴 اختر العرض الذي تريد إيقافه:",
+            "delete": "🗑️ اختر العرض الذي تريد حذفه:"
+        }[action]
+
+        await query.edit_message_text(
+            title,
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
+        return
+
+    if data.startswith("offer_action:"):
+        parts = data.split(":")
+        if len(parts) != 3:
+            await query.answer("❌ بيانات غير صحيحة.", show_alert=True)
+            return
+
+        action = parts[1]
+
+        try:
+            offer_id = int(parts[2])
+        except ValueError:
+            await query.answer("❌ رقم العرض غير صحيح.", show_alert=True)
+            return
+
+        db = get_db()
+        try:
+            offer = db.execute("""
+                SELECT o.id, o.active, o.offer_price,
+                       p.name AS product_name
+                FROM offers o
+                JOIN products p ON p.id = o.product_id
+                WHERE o.id = ?
+            """, (offer_id,)).fetchone()
+
+            if not offer:
+                await query.answer("❌ العرض غير موجود.", show_alert=True)
+                return
+
+            if action == "enable":
+                db.execute(
+                    "UPDATE offers SET active = 0 WHERE active = 1"
+                )
+                db.execute(
+                    "UPDATE offers SET active = 1 WHERE id = ?",
+                    (offer_id,)
+                )
+                db.commit()
+
+                await query.answer("✅ تم تفعيل العرض.")
+                await query.edit_message_text(
+                    f"🟢 <b>تم تفعيل العرض</b>\n\n"
+                    f"📦 {esc(offer['product_name'])}\n"
+                    f"🔥 السعر: {offer['offer_price']:,.0f}",
+                    parse_mode="HTML"
+                )
+
+            elif action == "disable":
+                db.execute(
+                    "UPDATE offers SET active = 0 WHERE id = ?",
+                    (offer_id,)
+                )
+                db.commit()
+
+                await query.answer("🔴 تم إيقاف العرض.")
+                await query.edit_message_text(
+                    f"🔴 <b>تم إيقاف العرض</b>\n\n"
+                    f"📦 {esc(offer['product_name'])}\n"
+                    f"💰 السعر: {offer['offer_price']:,.0f}",
+                    parse_mode="HTML"
+                )
+
+            elif action == "delete":
+                db.execute(
+                    "DELETE FROM offers WHERE id = ?",
+                    (offer_id,)
+                )
+                db.commit()
+
+                await query.answer("🗑️ تم حذف العرض.")
+                await query.edit_message_text(
+                    f"🗑️ <b>تم حذف العرض</b>\n\n"
+                    f"📦 {esc(offer['product_name'])}",
+                    parse_mode="HTML"
+                )
+
+        finally:
+            db.close()
+
+        return
+
     if data == "offer_create":
         if not is_admin(query.from_user.id):
             await query.answer("❌ غير مصرح لك", show_alert=True)
