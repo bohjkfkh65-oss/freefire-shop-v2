@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, jsonify
 import os
 from pathlib import Path
 import json
@@ -12,6 +12,8 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv('BOT_TOKEN', '').strip()
 ADMIN_CHAT_ID = os.getenv('ADMIN_CHAT_ID', '').strip()
+
+BOT_API_KEY = os.getenv("BOT_API_KEY", "").strip()
 
 app = Flask(__name__)
 
@@ -204,32 +206,72 @@ def login():
 @app.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
     verified = False
+    email = ""
+    recovery_id = ""
 
     if request.method == "POST":
-        email = request.form["email"].strip().lower()
-        recovery_id = request.form["recovery_id"].strip()
+        email = request.form.get("email", "").strip().lower()
+        recovery_id = request.form.get("recovery_id", "").strip()
 
         db = get_db()
 
         user = db.execute("""
-            SELECT id, username, whatsapp
+            SELECT id, username
             FROM users
             WHERE email = ?
               AND recovery_id = ?
         """, (email, recovery_id)).fetchone()
 
-        db.close()
-
         if user:
+            # إذا كانت البيانات صحيحة، نعرض نموذج كلمة المرور الجديدة
+            new_password = request.form.get("new_password", "")
+            confirm_password = request.form.get("confirm_password", "")
+
+            if new_password or confirm_password:
+                if len(new_password) < 6:
+                    db.close()
+                    flash("❌ كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل")
+                    return render_template(
+                        "forgot_password.html",
+                        verified=True,
+                        email=email,
+                        recovery_id=recovery_id
+                    )
+
+                if new_password != confirm_password:
+                    db.close()
+                    flash("❌ كلمتا المرور غير متطابقتين")
+                    return render_template(
+                        "forgot_password.html",
+                        verified=True,
+                        email=email,
+                        recovery_id=recovery_id
+                    )
+
+                new_hash = generate_password_hash(new_password)
+
+                db.execute(
+                    "UPDATE users SET password = ? WHERE id = ?",
+                    (new_hash, user["id"])
+                )
+                db.commit()
+                db.close()
+
+                flash("✅ تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.")
+                return redirect(url_for("login"))
+
             verified = True
-            flash("✅ تم التحقق من بيانات الحساب. تواصل مع الدعم لإعادة تعيين كلمة المرور.")
+
         else:
             flash("❌ البريد الإلكتروني أو Recovery ID غير صحيح.")
+
+        db.close()
 
     return render_template(
         "forgot_password.html",
         verified=verified,
-        support_whatsapp="0926336869"
+        email=email,
+        recovery_id=recovery_id
     )
 
 
@@ -1024,6 +1066,172 @@ def suggestion():
         return redirect(url_for("suggestion"))
 
     return render_template("suggestion.html")
+
+# =========================
+# Telegram Bot API
+# =========================
+
+def bot_api_authorized():
+    provided = request.headers.get("X-Bot-API-Key", "").strip()
+    return bool(BOT_API_KEY) and provided == BOT_API_KEY
+
+
+@app.post("/api/bot/deposits/<int:deposit_id>/approve")
+def bot_approve_deposit(deposit_id):
+    if not bot_api_authorized():
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+    db = get_db()
+
+    try:
+        deposit = db.execute("""
+            SELECT
+                deposits.id,
+                deposits.user_id,
+                deposits.amount,
+                deposits.transaction_number,
+                deposits.status,
+                users.username
+            FROM deposits
+            JOIN users ON users.id = deposits.user_id
+            WHERE deposits.id = ?
+        """, (deposit_id,)).fetchone()
+
+        if not deposit:
+            return jsonify({
+                "success": False,
+                "error": "Deposit not found"
+            }), 404
+
+        if deposit["status"] != "pending":
+            return jsonify({
+                "success": False,
+                "error": "Deposit already processed",
+                "status": deposit["status"]
+            }), 409
+
+        updated = db.execute("""
+            UPDATE deposits
+            SET status = 'accepted'
+            WHERE id = ? AND status = 'pending'
+        """, (deposit_id,))
+
+        if updated.rowcount != 1:
+            db.rollback()
+            return jsonify({
+                "success": False,
+                "error": "Deposit was already processed"
+            }), 409
+
+        balance_update = db.execute("""
+            UPDATE users
+            SET balance = balance + ?
+            WHERE id = ?
+        """, (deposit["amount"], deposit["user_id"]))
+
+        if balance_update.rowcount != 1:
+            db.rollback()
+            return jsonify({
+                "success": False,
+                "error": "User not found"
+            }), 404
+
+        new_balance = db.execute("""
+            SELECT balance
+            FROM users
+            WHERE id = ?
+        """, (deposit["user_id"],)).fetchone()["balance"]
+
+        db.commit()
+
+        return jsonify({
+            "success": True,
+            "deposit_id": deposit_id,
+            "username": deposit["username"],
+            "amount": deposit["amount"],
+            "transaction_number": deposit["transaction_number"],
+            "new_balance": new_balance
+        })
+
+    except Exception as e:
+        db.rollback()
+        print("BOT APPROVE API ERROR:", e)
+        return jsonify({
+            "success": False,
+            "error": "Internal server error"
+        }), 500
+
+    finally:
+        db.close()
+
+
+@app.post("/api/bot/deposits/<int:deposit_id>/reject")
+def bot_reject_deposit(deposit_id):
+    if not bot_api_authorized():
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+    db = get_db()
+
+    try:
+        deposit = db.execute("""
+            SELECT
+                deposits.id,
+                deposits.user_id,
+                deposits.amount,
+                deposits.transaction_number,
+                deposits.status,
+                users.username
+            FROM deposits
+            JOIN users ON users.id = deposits.user_id
+            WHERE deposits.id = ?
+        """, (deposit_id,)).fetchone()
+
+        if not deposit:
+            return jsonify({
+                "success": False,
+                "error": "Deposit not found"
+            }), 404
+
+        if deposit["status"] != "pending":
+            return jsonify({
+                "success": False,
+                "error": "Deposit already processed",
+                "status": deposit["status"]
+            }), 409
+
+        updated = db.execute("""
+            UPDATE deposits
+            SET status = 'rejected'
+            WHERE id = ? AND status = 'pending'
+        """, (deposit_id,))
+
+        if updated.rowcount != 1:
+            db.rollback()
+            return jsonify({
+                "success": False,
+                "error": "Deposit was already processed"
+            }), 409
+
+        db.commit()
+
+        return jsonify({
+            "success": True,
+            "deposit_id": deposit_id,
+            "username": deposit["username"],
+            "amount": deposit["amount"],
+            "transaction_number": deposit["transaction_number"]
+        })
+
+    except Exception as e:
+        db.rollback()
+        print("BOT REJECT API ERROR:", e)
+        return jsonify({
+            "success": False,
+            "error": "Internal server error"
+        }), 500
+
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
